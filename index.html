@@ -525,14 +525,46 @@ function loadConfig() {
   return c;
 }
 const saveConfig = c => ls.set('config', c);
-const loadDayType  = d => localStorage.getItem('daytype_'+d) || 'train';
-const saveDayType  = (d,t) => localStorage.setItem('daytype_'+d, t);
+
+// Tagtyp: pro Datum gespeichert, aber beim ersten Öffnen eines neuen Tages
+// wird der letzte gesetzte Tagtyp als Standard übernommen
+function loadDayType(d) {
+  const saved = localStorage.getItem('daytype_'+d);
+  if (saved) return saved; // Schon für diesen Tag gesetzt
+  // Neuer Tag: letzten gesetzten Tagtyp als Standard nehmen
+  const lastType = localStorage.getItem('daytype_last') || 'train';
+  // Automatisch für heute speichern
+  localStorage.setItem('daytype_'+d, lastType);
+  return lastType;
+}
+function saveDayType(d, t) {
+  localStorage.setItem('daytype_'+d, t);
+  localStorage.setItem('daytype_last', t); // Merken für nächsten Tag
+}
+
 const loadEntries  = d => ls.get('entries_'+d) || [];
 const saveEntries  = (d,e) => ls.set('entries_'+d, e);
 const loadFoodDb   = () => ls.get('foodDb') || [];
 const saveFoodDb   = db => ls.set('foodDb', db);
 const loadMealsDb  = () => ls.get('mealsDb') || [];
 const saveMealsDb  = m => ls.set('mealsDb', m);
+
+// ═══════════════════════════════════════════
+//  MITTERNACHTS-RESET
+// ═══════════════════════════════════════════
+let _lastRenderedDay = todayKey();
+
+function startMidnightWatcher() {
+  setInterval(() => {
+    const currentDay = todayKey();
+    if (currentDay !== _lastRenderedDay) {
+      // Neuer Tag! App neu rendern
+      _lastRenderedDay = currentDay;
+      render();
+      showToast('Neuer Tag – Tracking resettet ✦');
+    }
+  }, 30000); // Alle 30 Sekunden prüfen
+}
 
 // ═══════════════════════════════════════════
 //  DAY TYPE
@@ -1361,6 +1393,12 @@ function ea(s){return String(s).replace(/'/g,"\\'").replace(/"/g,'&quot;');}
         .catch(err => console.error('SW Fehler:', err));
     });
   }
+
+// ═══════════════════════════════════════════
+//  START
+// ═══════════════════════════════════════════
+render();
+startMidnightWatcher();
 </script>
 </body>
 </html>
