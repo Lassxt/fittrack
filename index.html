@@ -554,16 +554,24 @@ const saveMealsDb  = m => ls.set('mealsDb', m);
 // ═══════════════════════════════════════════
 let _lastRenderedDay = todayKey();
 
+function checkDayChange() {
+  const currentDay = todayKey();
+  if (currentDay !== _lastRenderedDay) {
+    _lastRenderedDay = currentDay;
+    render();
+    showToast('Neuer Tag ✦ Tracking resettet');
+  }
+}
+
 function startMidnightWatcher() {
-  setInterval(() => {
-    const currentDay = todayKey();
-    if (currentDay !== _lastRenderedDay) {
-      // Neuer Tag! App neu rendern
-      _lastRenderedDay = currentDay;
-      render();
-      showToast('Neuer Tag – Tracking resettet ✦');
+  // Prüfen wenn App wieder sichtbar wird (Handy entsperren, App öffnen)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      checkDayChange();
     }
-  }, 30000); // Alle 30 Sekunden prüfen
+  });
+  // Zusätzlich alle 60 Sekunden wenn App aktiv ist
+  setInterval(checkDayChange, 60000);
 }
 
 // ═══════════════════════════════════════════
