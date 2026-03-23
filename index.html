@@ -506,7 +506,13 @@ const DEF = {
 };
 
 const now = () => new Date();
-const todayKey = () => now().toISOString().slice(0,10);
+const todayKey = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 const timeNow  = () => now().toTimeString().slice(0,5);
 const pad2     = n => String(n).padStart(2,'0');
 
